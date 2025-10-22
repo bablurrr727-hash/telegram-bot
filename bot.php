@@ -20,10 +20,10 @@ $stateFile = __DIR__ . "/user_states.json";
 $userStates = file_exists($stateFile) ? json_decode(file_get_contents($stateFile), true) : [];
 
 $designs = [
-    "1" => "https://github.com/bablurrr727-hash/telegram-bot/blob/main/WhatsApp%20Image%202025-09-07%20at%2017.49.48.jpeg",
+    "1" => "https://raw.githubusercontent.com/bablurrr727-hash/telegram-bot/main/WhatsApp%20Image%202025-09-07%20at%2017.49.48.jpeg",
     "2" => "https://i.imgur.com/5m0Uj6T.png",
-    "3" => "https://github.com/bablurrr727-hash/telegram-bot/blob/main/photo_6226367695230715396_y.jpg",
-    "4" => "https://github.com/bablurrr727-hash/telegram-bot/blob/main/photo_6226367695230715394_y.jpg"
+    "3" => "https://raw.githubusercontent.com/bablurrr727-hash/telegram-bot/main/photo_6226367695230715396_y.jpg",
+    "4" => "https://raw.githubusercontent.com/bablurrr727-hash/telegram-bot/main/photo_6226367695230715394_y.jpg"
 ];
 
 $qrUSDT = "https://i.imgur.com/J8VQz6D.png"; // Example USDT QR
@@ -154,4 +154,5 @@ else {
 // Save user states
 file_put_contents($stateFile, json_encode($userStates, JSON_PRETTY_PRINT));
 ?>
+
 
