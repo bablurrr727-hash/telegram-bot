@@ -83,7 +83,9 @@ if (isset($update['callback_query'])) {
     sendMessage($chatId, "✅ You selected plan: *$plan*\nApp: *$appDetails*\nDesign: *$selectedDesign*");
 
     // Show USDT QR
-    sendPhoto($chatId, $qrUSDT, "💳 Scan this QR to pay in USDT");
+    sendPhoto($chatId, $qrUSDT, Note: Only USDT is accepted (If you use UPI, you need to purchase USDT first, e.g. on Binance).
+        
+        "💳 Scan this QR to pay in USDT");
 
     // Clear state
     unset($userStates[$chatId]);
@@ -108,9 +110,9 @@ elseif ($state === "waiting_for_custom_input") {
     $userStates[$chatId]['state'] = "waiting_for_design";
 
     // Show design options
-    sendMessage($chatId, "Thanks! You requested App #".$userStates[$chatId]['selected_app'].":\n\"$text\"\n\nNow choose your design style:");
+    sendMessage($chatId, "Thanks! You requested App #".$userStates[$chatId]['selected_app'].":\n\"$text\"\n\nNow choose your Admin design style:");
     foreach ($designs as $num => $url) {
-        sendPhoto($chatId, $url, "Design #$num");
+        sendPhoto($chatId, $url, "Admin Design #$num");
     }
 }
 
@@ -154,5 +156,6 @@ else {
 // Save user states
 file_put_contents($stateFile, json_encode($userStates, JSON_PRETTY_PRINT));
 ?>
+
 
 
