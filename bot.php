@@ -1,15 +1,18 @@
 <?php
-$botToken = "YOUR_BOT_TOKEN_HERE"; // ← replace with your real token
-$website = "https://api.telegram.org/bot".$botToken;
+// Read sensitive info from environment variables
+$botToken = getenv('BOT_TOKEN');
+$website  = "https://api.telegram.org/bot".$botToken;
 
+// Read Telegram update
 $update = file_get_contents("php://input");
 $update = json_decode($update, TRUE);
 
+if(!isset($update["message"])) exit;
+
 $chatId = $update["message"]["chat"]["id"];
-$text = isset($update["message"]["text"]) ? trim($update["message"]["text"]) : "";
+$text   = isset($update["message"]["text"]) ? trim($update["message"]["text"]) : "";
 
 $menu = "All Available Admin Panels ✅
-✍️✍️✍️
 1️⃣ RTO CHALAN APP ✅
 2️⃣ PM-Kisan APP ✅
 3️⃣ PM AAWAS YOJANA APP ✅
@@ -31,8 +34,7 @@ $plans = "💰 *Subscription Plans:*
 | M2 | $129 | 1 APK | 2 Months |
 | M3 | $169 | 1 APK | 3 Months |
 
-🪙 *Note:* Only USDT is accepted.
-(If you use UPI, you need to purchase USDT first — e.g., on Binance.)";
+🪙 *Note:* Only USDT is accepted.";
 
 function sendMessage($chatId, $text, $parse = "Markdown") {
     global $website;
@@ -44,14 +46,15 @@ function sendPhoto($chatId, $photoUrl, $caption = "") {
     file_get_contents($website."/sendPhoto?chat_id=".$chatId."&photo=".urlencode($photoUrl)."&caption=".urlencode($caption));
 }
 
+// Handle commands
 if ($text == "/start") {
     sendMessage($chatId, "👋 Welcome! I’m your App Selection Bot.\n\n".$menu);
 }
-elseif (preg_match('/^[1-9]|10$/', $text)) {
+elseif (preg_match('/^(10|[1-9])$/', $text)) {
     sendMessage($chatId, "You selected *App #$text* ✅\n\n".$plans);
     sendMessage($chatId, "Now please choose your design style:\n1️⃣ Modern\n2️⃣ Minimal\n3️⃣ Professional\n4️⃣ Gradient\nReply with design number 👇");
 }
-elseif (in_array($text, ["1", "2", "3", "4"])) {
+elseif (in_array((string)$text, ["1","2","3","4"])) {
     $designs = [
         "1" => "https://i.imgur.com/jO1aN7k.png",
         "2" => "https://i.imgur.com/5m0Uj6T.png",
