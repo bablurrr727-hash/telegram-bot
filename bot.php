@@ -72,16 +72,14 @@ $text   = $update['message']['text'] ?? null;
 if (isset($update['callback_query'])) {
     $chatId = $update['callback_query']['message']['chat']['id'];
     $plan = $update['callback_query']['data']; // e.g., plan_M1
-    sendMessage($chatId, "You selected plan: *$plan*\n\nNow choose your design style:");
+    sendMessage($chatId, "You selected plan: *$plan*\n\nNow proceed with payment to confirm your order.");
 
-    global $designs;
-    foreach ($designs as $num => $url) {
-        sendPhoto($chatId, $url, "Design #$num");
-    }
-    
-    // Save plan selection
     global $userStates;
-    $userStates[$chatId]['plan'] = $plan;
+    $selectedApp = $userStates[$chatId]['selected_app'];
+    $appDetails  = $userStates[$chatId]['app_details'] ?? "App #$selectedApp";
+    sendMessage($chatId, "App: *$appDetails*\nPlan: *$plan*");
+
+    unset($userStates[$chatId]);
     file_put_contents(__DIR__ . "/user_states.json", json_encode($userStates, JSON_PRETTY_PRINT));
     exit;
 }
@@ -100,56 +98,52 @@ if ($text == "/start") {
 // Waiting for custom input (apps 8-10)
 elseif ($state === "waiting_for_custom_input") {
     $userStates[$chatId]['app_details'] = $text;
-    $userStates[$chatId]['state'] = "waiting_for_plan";
+    $userStates[$chatId]['state'] = "waiting_for_design";
 
-    sendMessage($chatId, "Thanks! You requested App #".$userStates[$chatId]['selected_app'].":\n\"$text\"\n");
-    sendPlanOptions($chatId);
+    // Show design options
+    sendMessage($chatId, "Thanks! You requested App #".$userStates[$chatId]['selected_app'].":\n\"$text\"\n\nNow choose your design style:");
+    foreach ($designs as $num => $url) {
+        sendPhoto($chatId, $url, "Design #$num");
+    }
 }
 
-// Waiting for design selection (after plan selected)
-elseif ($state === "waiting_for_design_selection" && in_array($text, ["1","2","3","4"])) {
+// Waiting for design selection (after app 1-10 or custom input)
+elseif ($state === "waiting_for_design" && in_array($text, ["1","2","3","4"])) {
     $selectedApp = $userStates[$chatId]['selected_app'];
     $appDetails  = $userStates[$chatId]['app_details'] ?? "App #$selectedApp";
-    $plan        = $userStates[$chatId]['plan'] ?? "";
+    $userStates[$chatId]['selected_design'] = $text;
+    $userStates[$chatId]['state'] = "waiting_for_plan";
 
-    sendPhoto($chatId, $designs[$text], "Here’s your selected design style ✅\n\nApp: *$appDetails*\nPlan: *$plan*\n\nNow proceed with payment to confirm your order:");
-    sendPhoto($chatId, "https://i.imgur.com/J8VQz6D.png", "💳 Scan this to pay in USDT (mock example).");
-
-    unset($userStates[$chatId]);
-}
-
-// Waiting for plan selection (after app 1-7 or custom input)
-elseif ($state === "waiting_for_plan") {
-    sendMessage($chatId, "Please select a plan by tapping one of the buttons above.");
+    sendPhoto($chatId, $designs[$text], "You selected Design #$text ✅\n\nNow choose your subscription plan:");
+    sendPlanOptions($chatId);
 }
 
 // User selects an app number
 elseif (preg_match('/^(10|[1-9])$/', $text)) {
     if (in_array($text, ["8","9","10"])) {
+        // Ask for custom input
         sendMessage($chatId, "You selected *App #$text* ✅\n\nPlease type the name or details of the app you want to request:");
         $userStates[$chatId] = [
             'state' => 'waiting_for_custom_input',
             'selected_app' => $text
         ];
     } else {
-        // Apps 1-7: save app, show plans
+        // Apps 1-7: skip custom input, go to design
         $userStates[$chatId] = [
-            'state' => 'waiting_for_plan',
+            'state' => 'waiting_for_design',
             'selected_app' => $text
         ];
-        sendMessage($chatId, "You selected *App #$text* ✅\n");
-        sendPlanOptions($chatId);
+        sendMessage($chatId, "You selected *App #$text* ✅\n\nNow choose your design style:");
+        foreach ($designs as $num => $url) {
+            sendPhoto($chatId, $url, "Design #$num");
+        }
     }
-}
-
-// Waiting for design number (after plan selection)
-elseif (in_array($text, ["1","2","3","4"])) {
-    sendMessage($chatId, "Please select a plan first using the buttons above.");
 }
 
 else {
     sendMessage($chatId, "Please send /start to begin again.");
 }
 
+// Save user states
 file_put_contents($stateFile, json_encode($userStates, JSON_PRETTY_PRINT));
 ?>
