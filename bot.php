@@ -26,6 +26,8 @@ $designs = [
     "4" => "https://i.imgur.com/pv3v4Sv.png"
 ];
 
+$qrUSDT = "https://i.imgur.com/J8VQz6D.png"; // Example USDT QR
+
 // Send message
 function sendMessage($chatId, $text, $parse = "Markdown") {
     global $website;
@@ -72,13 +74,18 @@ $text   = $update['message']['text'] ?? null;
 if (isset($update['callback_query'])) {
     $chatId = $update['callback_query']['message']['chat']['id'];
     $plan = $update['callback_query']['data']; // e.g., plan_M1
-    sendMessage($chatId, "You selected plan: *$plan*\n\nNow proceed with payment to confirm your order.");
+    global $userStates, $qrUSDT;
 
-    global $userStates;
-    $selectedApp = $userStates[$chatId]['selected_app'];
-    $appDetails  = $userStates[$chatId]['app_details'] ?? "App #$selectedApp";
-    sendMessage($chatId, "App: *$appDetails*\nPlan: *$plan*");
+    $selectedApp = $userStates[$chatId]['selected_app'] ?? "App";
+    $appDetails  = $userStates[$chatId]['app_details'] ?? $selectedApp;
+    $selectedDesign = $userStates[$chatId]['selected_design'] ?? "";
 
+    sendMessage($chatId, "✅ You selected plan: *$plan*\nApp: *$appDetails*\nDesign: *$selectedDesign*");
+
+    // Show USDT QR
+    sendPhoto($chatId, $qrUSDT, "💳 Scan this QR to pay in USDT");
+
+    // Clear state
     unset($userStates[$chatId]);
     file_put_contents(__DIR__ . "/user_states.json", json_encode($userStates, JSON_PRETTY_PRINT));
     exit;
@@ -107,7 +114,7 @@ elseif ($state === "waiting_for_custom_input") {
     }
 }
 
-// Waiting for design selection (after app 1-10 or custom input)
+// Waiting for design selection
 elseif ($state === "waiting_for_design" && in_array($text, ["1","2","3","4"])) {
     $selectedApp = $userStates[$chatId]['selected_app'];
     $appDetails  = $userStates[$chatId]['app_details'] ?? "App #$selectedApp";
