@@ -1,9 +1,9 @@
 <?php
-// Read sensitive info from environment variables
+// Get bot token from environment variables
 $botToken = getenv('BOT_TOKEN');
 $website  = "https://api.telegram.org/bot".$botToken;
 
-// Menu and plans
+// Menu and subscription plans
 $menu = "All Available Admin Panels ✅
 1️⃣ RTO CHALAN APP ✅
 2️⃣ PM-Kisan APP ✅
@@ -28,82 +28,48 @@ $plans = "💰 *Subscription Plans:*
 
 🪙 *Note:* Only USDT is accepted.";
 
-// Send message function with error handling
+// Send message
 function sendMessage($chatId, $text, $parse = "Markdown") {
     global $website;
     $url = $website."/sendMessage?chat_id=".$chatId."&text=".urlencode($text)."&parse_mode=".$parse;
-    $result = @file_get_contents($url);
-    if ($result === FALSE) {
-        error_log("Failed to send message to $chatId: $text");
-    }
+    @file_get_contents($url);
 }
 
-// Send photo function with error handling
+// Send photo
 function sendPhoto($chatId, $photoUrl, $caption = "") {
     global $website;
     $url = $website."/sendPhoto?chat_id=".$chatId."&photo=".urlencode($photoUrl)."&caption=".urlencode($caption);
-    $result = @file_get_contents($url);
-    if ($result === FALSE) {
-        error_log("Failed to send photo to $chatId: $photoUrl");
-    }
+    @file_get_contents($url);
 }
 
-// Track last processed update
-$offset = 0;
+// Read Telegram POST data
+$update = file_get_contents("php://input");
+$update = json_decode($update, true);
 
-// Infinite long-polling loop
-while(true) {
-    try {
-        $updates = @file_get_contents($website."/getUpdates?offset=$offset&timeout=30");
-        if ($updates === FALSE) {
-            error_log("Failed to fetch updates from Telegram, retrying in 5s...");
-            sleep(5);
-            continue;
-        }
+if (!isset($update['message'])) exit;
 
-        $updates = json_decode($updates, true);
-        if(!empty($updates['result'])) {
-            foreach($updates['result'] as $update) {
-                $offset = $update['update_id'] + 1;
+$chatId = $update['message']['chat']['id'];
+$text   = $update['message']['text'] ?? "";
 
-                if(!isset($update['message'])) continue;
-
-                $chatId = $update['message']['chat']['id'];
-                $text   = $update['message']['text'] ?? '';
-
-                // Log incoming message
-                error_log("Incoming message from $chatId: $text");
-
-                // Handle commands
-                if($text == "/start") {
-                    sendMessage($chatId, "👋 Welcome! I’m your App Selection Bot.\n\n".$menu);
-                }
-                elseif(preg_match('/^(10|[1-9])$/', $text)) {
-                    sendMessage($chatId, "You selected *App #$text* ✅\n\n".$plans);
-                    sendMessage($chatId, "Now please choose your design style:\n1️⃣ Modern\n2️⃣ Minimal\n3️⃣ Professional\n4️⃣ Gradient\nReply with design number 👇");
-                }
-                elseif(in_array((string)$text, ["1","2","3","4"])) {
-                    $designs = [
-                        "1" => "https://i.imgur.com/jO1aN7k.png",
-                        "2" => "https://i.imgur.com/5m0Uj6T.png",
-                        "3" => "https://i.imgur.com/ViqSdZb.png",
-                        "4" => "https://i.imgur.com/pv3v4Sv.png"
-                    ];
-                    sendPhoto($chatId, $designs[$text], "Here’s your selected design style ✅\n\nNow proceed with payment to confirm your order:");
-                    sendPhoto($chatId, "https://i.imgur.com/J8VQz6D.png", "💳 Scan this to pay in USDT (mock example).");
-                }
-                else {
-                    sendMessage($chatId, "Please send /start to begin again.");
-                }
-            }
-        }
-
-        // Sleep 1 second before next poll
-        sleep(1);
-
-    } catch (Exception $e) {
-        error_log("Exception in main loop: ".$e->getMessage());
-        sleep(5);
-    }
+// Handle commands
+if ($text == "/start") {
+    sendMessage($chatId, "👋 Welcome! I’m your App Selection Bot.\n\n".$menu);
+}
+elseif (preg_match('/^(10|[1-9])$/', $text)) {
+    sendMessage($chatId, "You selected *App #$text* ✅\n\n".$plans);
+    sendMessage($chatId, "Now please choose your design style:\n1️⃣ Modern\n2️⃣ Minimal\n3️⃣ Professional\n4️⃣ Gradient\nReply with design number 👇");
+}
+elseif (in_array((string)$text, ["1","2","3","4"])) {
+    $designs = [
+        "1" => "https://i.imgur.com/jO1aN7k.png",
+        "2" => "https://i.imgur.com/5m0Uj6T.png",
+        "3" => "https://i.imgur.com/ViqSdZb.png",
+        "4" => "https://i.imgur.com/pv3v4Sv.png"
+    ];
+    sendPhoto($chatId, $designs[$text], "Here’s your selected design style ✅\n\nNow proceed with payment to confirm your order:");
+    sendPhoto($chatId, "https://i.imgur.com/J8VQz6D.png", "💳 Scan this to pay in USDT (mock example).");
+}
+else {
+    sendMessage($chatId, "Please send /start to begin again.");
 }
 ?>
