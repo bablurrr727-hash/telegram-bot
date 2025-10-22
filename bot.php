@@ -22,7 +22,7 @@ $userStates = file_exists($stateFile) ? json_decode(file_get_contents($stateFile
 
 $designs = [
     "1" => "https://raw.githubusercontent.com/bablurrr727-hash/telegram-bot/main/WhatsApp%20Image%202025-09-07%20at%2017.49.48.jpeg",
-    "2" => "https://i.imgur.com/5m0Uj6T.png",
+    "2" => "https://raw.githubusercontent.com/bablurrr727-hash/telegram-bot/main/WhatsApp%20Image%202025-10-22%20at%2013.19.45.jpeg",
     "3" => "https://raw.githubusercontent.com/bablurrr727-hash/telegram-bot/main/photo_6226367695230715396_y.jpg",
     "4" => "https://raw.githubusercontent.com/bablurrr727-hash/telegram-bot/main/photo_6226367695230715394_y.jpg"
 ];
@@ -157,6 +157,7 @@ else {
 // Save user states
 file_put_contents($stateFile, json_encode($userStates, JSON_PRETTY_PRINT));
 ?>
+
 
 
 
