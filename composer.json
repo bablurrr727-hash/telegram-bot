@@ -1,0 +1,7 @@
+{
+  "name": "telegram/php-bot",
+  "description": "A Telegram bot using PHP for Render",
+  "require": {
+    "ext-json": "*"
+  }
+}
