@@ -18,7 +18,7 @@ $menu = "All Available Admin Panels ✅
 
 Reply with the number of the App you want 👇";
 
-$plans = "💰 *Subscription rr Plans:* 
+$plans = "💰 *Subscription Plans:* 
 
 | Plan | Price | APKs | Valid |
 |------|:------:|:----:|:------:|
@@ -27,6 +27,10 @@ $plans = "💰 *Subscription rr Plans:*
 | M3 | $169 | 1 APK | 3 Months |
 
 🪙 *Note:* Only USDT is accepted.";
+
+// File to store user states
+$stateFile = __DIR__ . "/user_states.json";
+$userStates = file_exists($stateFile) ? json_decode(file_get_contents($stateFile), true) : [];
 
 // Send message
 function sendMessage($chatId, $text, $parse = "Markdown") {
@@ -51,13 +55,34 @@ if (!isset($update['message'])) exit;
 $chatId = $update['message']['chat']['id'];
 $text   = $update['message']['text'] ?? "";
 
+// Check user state
+$state = $userStates[$chatId]['state'] ?? null;
+
 // Handle commands
 if ($text == "/start") {
     sendMessage($chatId, "👋 Welcome! I’m your App Selection Bot.\n\n".$menu);
+    unset($userStates[$chatId]); // reset state
+}
+elseif ($state === "waiting_for_custom_input") {
+    // User previously selected 8,9,10 and now sending custom app input
+    $selectedApp = $userStates[$chatId]['selected_app'];
+    sendMessage($chatId, "Thanks! We received your request for *App #$selectedApp*:\n\n\"$text\"\n\nWe will contact you shortly to confirm your order.");
+    unset($userStates[$chatId]); // clear state
 }
 elseif (preg_match('/^(10|[1-9])$/', $text)) {
-    sendMessage($chatId, "You selected *App #$text* ✅\n\n".$plans);
-    sendMessage($chatId, "Now please choose your design style:\n1️⃣ Modern\n2️⃣ Minimal\n3️⃣ Professional\n4️⃣ Gradient\nReply with design number 👇");
+    if (in_array($text, ["8","9","10"])) {
+        // Ask user to input details
+        sendMessage($chatId, "You selected *App #$text* ✅\n\nPlease type the name or details of the app you want to request:");
+        // Save state
+        $userStates[$chatId] = [
+            'state' => 'waiting_for_custom_input',
+            'selected_app' => $text
+        ];
+    } else {
+        // Show subscription plans and design options
+        sendMessage($chatId, "You selected *App #$text* ✅\n\n".$plans);
+        sendMessage($chatId, "Now please choose your design style:\n1️⃣ Modern\n2️⃣ Minimal\n3️⃣ Professional\n4️⃣ Gradient\nReply with design number 👇");
+    }
 }
 elseif (in_array((string)$text, ["1","2","3","4"])) {
     $designs = [
@@ -72,6 +97,7 @@ elseif (in_array((string)$text, ["1","2","3","4"])) {
 else {
     sendMessage($chatId, "Please send /start to begin again.");
 }
+
+// Save updated states
+file_put_contents($stateFile, json_encode($userStates, JSON_PRETTY_PRINT));
 ?>
-
-
