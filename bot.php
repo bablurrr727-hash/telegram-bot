@@ -1,9 +1,7 @@
 <?php
-// Get bot token from environment variables
 $botToken = getenv('BOT_TOKEN');
 $website  = "https://api.telegram.org/bot".$botToken;
 
-// Menu and subscription plans
 $menu = "All Available Admin Panels ✅
 1️⃣ RTO CHALAN APP ✅
 2️⃣ PM-Kisan APP ✅
@@ -28,25 +26,21 @@ $plans = "💰 *Subscription Plans:*
 
 🪙 *Note:* Only USDT is accepted.";
 
-// File to store user states
 $stateFile = __DIR__ . "/user_states.json";
 $userStates = file_exists($stateFile) ? json_decode(file_get_contents($stateFile), true) : [];
 
-// Send message
 function sendMessage($chatId, $text, $parse = "Markdown") {
     global $website;
     $url = $website."/sendMessage?chat_id=".$chatId."&text=".urlencode($text)."&parse_mode=".$parse;
     @file_get_contents($url);
 }
 
-// Send photo
 function sendPhoto($chatId, $photoUrl, $caption = "") {
     global $website;
     $url = $website."/sendPhoto?chat_id=".$chatId."&photo=".urlencode($photoUrl)."&caption=".urlencode($caption);
     @file_get_contents($url);
 }
 
-// Read Telegram POST data
 $update = file_get_contents("php://input");
 $update = json_decode($update, true);
 
@@ -55,42 +49,58 @@ if (!isset($update['message'])) exit;
 $chatId = $update['message']['chat']['id'];
 $text   = $update['message']['text'] ?? "";
 
-// Check user state
 $state = $userStates[$chatId]['state'] ?? null;
 
-// Handle commands
+// Design images
+$designs = [
+    "1" => "https://i.imgur.com/jO1aN7k.png",
+    "2" => "https://i.imgur.com/5m0Uj6T.png",
+    "3" => "https://i.imgur.com/ViqSdZb.png",
+    "4" => "https://i.imgur.com/pv3v4Sv.png"
+];
+
 if ($text == "/start") {
     sendMessage($chatId, "👋 Welcome! I’m your App Selection Bot.\n\n".$menu);
-    unset($userStates[$chatId]); // reset state
+    unset($userStates[$chatId]);
 }
 elseif ($state === "waiting_for_custom_input") {
-    // User previously selected 8,9,10 and now sending custom app input
+    // User sent app details for apps 8,9,10
     $selectedApp = $userStates[$chatId]['selected_app'];
-    sendMessage($chatId, "Thanks! We received your request for *App #$selectedApp*:\n\n\"$text\"\n\nWe will contact you shortly to confirm your order.");
-    unset($userStates[$chatId]); // clear state
+    $userStates[$chatId]['app_details'] = $text;
+    $userStates[$chatId]['state'] = "waiting_for_design_selection";
+
+    // Show design options
+    sendMessage($chatId, "Thanks! You requested *App #$selectedApp*:\n\"$text\"\n\nNow, choose your design style:");
+    foreach ($designs as $num => $url) {
+        sendPhoto($chatId, $url, "Design #$num");
+    }
+}
+elseif ($state === "waiting_for_design_selection" && in_array($text, ["1","2","3","4"])) {
+    $selectedApp = $userStates[$chatId]['selected_app'];
+    $appDetails  = $userStates[$chatId]['app_details'];
+
+    sendPhoto($chatId, $designs[$text], "Here’s your selected design style ✅\n\nApp: *$appDetails*\nNow proceed with payment to confirm your order:");
+    sendPhoto($chatId, "https://i.imgur.com/J8VQz6D.png", "💳 Scan this to pay in USDT (mock example).");
+
+    unset($userStates[$chatId]);
 }
 elseif (preg_match('/^(10|[1-9])$/', $text)) {
     if (in_array($text, ["8","9","10"])) {
-        // Ask user to input details
         sendMessage($chatId, "You selected *App #$text* ✅\n\nPlease type the name or details of the app you want to request:");
-        // Save state
         $userStates[$chatId] = [
             'state' => 'waiting_for_custom_input',
             'selected_app' => $text
         ];
     } else {
-        // Show subscription plans and design options
         sendMessage($chatId, "You selected *App #$text* ✅\n\n".$plans);
         sendMessage($chatId, "Now please choose your design style:\n1️⃣ Modern\n2️⃣ Minimal\n3️⃣ Professional\n4️⃣ Gradient\nReply with design number 👇");
+        $userStates[$chatId] = [
+            'state' => 'waiting_for_design_selection',
+            'selected_app' => $text
+        ];
     }
 }
 elseif (in_array((string)$text, ["1","2","3","4"])) {
-    $designs = [
-        "1" => "https://i.imgur.com/jO1aN7k.png",
-        "2" => "https://i.imgur.com/5m0Uj6T.png",
-        "3" => "https://i.imgur.com/ViqSdZb.png",
-        "4" => "https://i.imgur.com/pv3v4Sv.png"
-    ];
     sendPhoto($chatId, $designs[$text], "Here’s your selected design style ✅\n\nNow proceed with payment to confirm your order:");
     sendPhoto($chatId, "https://i.imgur.com/J8VQz6D.png", "💳 Scan this to pay in USDT (mock example).");
 }
@@ -98,6 +108,5 @@ else {
     sendMessage($chatId, "Please send /start to begin again.");
 }
 
-// Save updated states
 file_put_contents($stateFile, json_encode($userStates, JSON_PRETTY_PRINT));
 ?>
