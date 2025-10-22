@@ -84,7 +84,7 @@ if (isset($update['callback_query'])) {
     sendMessage($chatId, "✅ You selected plan: *$plan*\nApp: *$appDetails*\nDesign: *$selectedDesign*");
 
     // Show USDT QR
-    sendPhoto($chatId, $qrUSDT, "Only USDT is accepted (If you use UPI, you need to purchase USDT first, e.g. on Binance).
+    sendPhoto($chatId, $qrUSDT, "Note: Only USDT is accepted (If you use UPI, you need to purchase USDT first, e.g. on Binance).
     
     💳 Scan this QR to pay in USDT");
 
@@ -157,4 +157,5 @@ else {
 // Save user states
 file_put_contents($stateFile, json_encode($userStates, JSON_PRETTY_PRINT));
 ?>
+
 
