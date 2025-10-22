@@ -86,7 +86,9 @@ if (isset($update['callback_query'])) {
     // Show USDT QR
     sendPhoto($chatId, $qrUSDT, "💳 Scan this QR to pay in USDT
     
-Note: Only USDT is accepted (If you use UPI, you need to purchase USDT first, e.g. on Binance).");
+Note: Only USDT is accepted (If you use UPI, you need to purchase USDT first, e.g. on Binance).
+
+If you have any problem contact @akking862");
 
     // Clear state
     unset($userStates[$chatId]);
@@ -157,6 +159,7 @@ else {
 // Save user states
 file_put_contents($stateFile, json_encode($userStates, JSON_PRETTY_PRINT));
 ?>
+
 
 
 
