@@ -18,11 +18,11 @@ $menu = "All Available Admin Panels ✅
 
 Reply with the number of the App you want 👇";
 
-$plans = "💰 *Subscription Plans:* 
+$plans = "💰 *Subscription rr Plans:* 
 
 | Plan | Price | APKs | Valid |
 |------|:------:|:----:|:------:|
-| M1 |  $79 | 1 APK | 1 Month |
+| M1 |   $79 | 1 APK | 1 Month |
 | M2 | $129 | 1 APK | 2 Months |
 | M3 | $169 | 1 APK | 3 Months |
 
@@ -73,4 +73,5 @@ else {
     sendMessage($chatId, "Please send /start to begin again.");
 }
 ?>
+
 
